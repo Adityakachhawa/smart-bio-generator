@@ -6,42 +6,31 @@ import requests
 import time
 import os
 
-import os
-import requests
-import streamlit as st
-
 def generate_bio(prompt: str) -> str:
-    from dotenv import load_dotenv
-    load_dotenv()
-
-    import streamlit as st
-    import os, requests
+    import os
+    import requests
 
     api_key = os.getenv("OPENROUTER_API_KEY")
-    st.write("🔐 Key starts with:", api_key[:10] + "...")  # Debug line
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY not set.")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://smart-ai-bio-caption-generator.streamlit.app",  # ✅ Change to your deployed URL
-        "X-Title": "Smart AI Bio Generator"
+        "HTTP-Referer": "https://smart-ai-bio-caption-generator.streamlit.app",
+        "X-Title": "Smart Bio Generator"
     }
 
     data = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "openai/gpt-3.5-turbo",  # or whatever model you saw in your 200 response
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 500
     }
 
     response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
 
-    try:
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
-    except requests.exceptions.HTTPError as e:
-        st.error("❌ API error. Please check your key and headers.")
-        st.code(response.text)
-        raise e
 
 
 # Load prompt template
