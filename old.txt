@@ -1,0 +1,587 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import streamlit as st
+from utils.openai_helper import generate_bio
+import time
+
+# Load prompt template
+def load_prompt(name):
+    with open(f"prompts/{name}.txt", "r") as file:
+        return file.read()
+
+st.set_page_config(
+    page_title="AI Social Assistant", 
+    page_icon="💫", 
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
+# Professional CSS with fixed colors and sticky footer
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+    
+    * {
+        font-family: 'Inter', sans-serif;
+        transition: all 0.3s ease;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    .stApp {
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    .content-wrap {
+        flex: 1;
+        padding-bottom: 80px;
+    }
+    
+    .header-container {
+        text-align: center;
+        padding: 1.5rem 0 2rem;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        border-radius: 0 0 20px 20px;
+        margin: -1rem;
+        padding-top: 3rem;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .header-container::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+        transform: rotate(30deg);
+    }
+    
+    .emoji-header {
+        font-size: 3.5rem !important;
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+    
+    .subheader {
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto;
+        opacity: 0.9;
+        font-weight: 300;
+        color: white;
+    }
+    
+    .section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .stButton>button {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        border: none;
+        font-size: 1rem;
+        box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+        transition: all 0.3s ease !important;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
+    }
+    
+    .stButton>button::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        transition: all 0.8s;
+    }
+    
+    .stButton>button:hover::after {
+        transform: translateX(100%) rotate(30deg);
+    }
+    
+    .stTextInput>div>div>input, .stTextArea>textarea {
+        border-radius: 12px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 12px 16px !important;
+        color: #334155 !important;
+    }
+    
+    .stTextInput>div>div>input:focus, .stTextArea>textarea:focus {
+        border: 1px solid #2563eb !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+    }
+    
+    .result-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+        margin: 2rem 0;
+    }
+    
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+        margin: 2rem 0;
+        border: none;
+    }
+    
+    .footer {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.9rem;
+        padding: 1.5rem;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 100;
+    }
+    
+    .icon-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        color: #334155;
+        font-weight: 500;
+    }
+    
+    .icon-label i {
+        color: #2563eb;
+        font-size: 18px;
+        width: 24px;
+        text-align: center;
+    }
+    
+    .section-title {
+        color: #1e293b;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .section-title i {
+        background: #dbeafe;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        font-size: 18px;
+    }
+    
+    .result-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .result-header i {
+        background: #dbeafe;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        font-size: 18px;
+    }
+    
+    .note-box {
+        background: #dbeafe;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin: 1.5rem 0;
+        border-left: 4px solid #2563eb;
+    }
+    
+    .feedback-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .creator-credit {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 10px;
+        font-size: 0.95rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Header Section
+st.markdown("""
+<div class="header-container">
+    <h1 class="emoji-header">AI Social Assistant</h1>
+    <p class="subheader">Human-like bios & captions that sound like you, not a robot</p>
+</div>
+<div class="content-wrap">
+""", unsafe_allow_html=True)
+
+# Note Box
+st.markdown("""
+<div class="note-box">
+    <strong><i class="fas fa-lightbulb"></i> Pro Tip:</strong> For best results, provide detailed information about your brand, audience, and goals. The more specific you are, the better the AI can tailor content to your voice!
+</div>
+""", unsafe_allow_html=True)
+
+# Step 1: Ask what user wants
+st.markdown("""
+<div class="section">
+    <div class="section-title">
+        <i class="fas fa-hand-point-right"></i>
+        <span>Let's get started! What would you like help with today?</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# Fixed radio widget with proper label handling
+purpose = st.radio(
+    "Purpose selection",
+    ["Create a profile bio", "Generate post caption + hashtags"],
+    index=0,
+    label_visibility="collapsed"
+)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# =================== BIO GENERATOR ===================
+if purpose == "Create a profile bio":
+    st.markdown('<div class="section">', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="section-title">
+            <i class="fas fa-user-edit"></i>
+            <span>Tell me about yourself</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<div class="icon-label"><i class="fas fa-mobile-alt"></i> Which platform are you creating for?</div>', unsafe_allow_html=True)
+        platform = st.selectbox(
+            "",
+            ["Instagram", "LinkedIn", "YouTube", "Twitter", "TikTok"],
+            label_visibility="collapsed",
+            help="Where will this bio appear?"
+        )
+        
+        st.markdown('<div class="icon-label"><i class="fas fa-briefcase"></i> What is your main role or profession?</div>', unsafe_allow_html=True)
+        profession = st.text_input(
+            "",
+            placeholder="e.g. Fashion designer, Student entrepreneur",
+            label_visibility="collapsed",
+            help="Your primary identity on this profile"
+        )
+        
+    with col2:
+        st.markdown('<div class="icon-label"><i class="fas fa-palette"></i> What personality tone do you prefer?</div>', unsafe_allow_html=True)
+        tone = st.selectbox(
+            "",
+            ["Professional", "Friendly", "Witty", "Inspirational", "Casual"],
+            index=0,
+            label_visibility="collapsed"
+        )
+        
+        st.markdown('<div class="icon-label"><i class="fas fa-list-ol"></i> How many bio options would you like?</div>', unsafe_allow_html=True)
+        num_bios = st.slider("", 1, 5, 3, label_visibility="collapsed")
+
+    # Profession-specific follow-up
+    if profession and profession.strip().lower() in ["artist", "creator", "designer"]:
+        st.markdown('<div class="icon-label"><i class="fas fa-paint-brush"></i> What type of art/creation do you specialize in?</div>', unsafe_allow_html=True)
+        art_type = st.text_input(
+            "",
+            placeholder="e.g. Oil painting, Digital illustrations, Street photography",
+            label_visibility="collapsed"
+        )
+    elif profession and profession.strip().lower() in ["business", "entrepreneur", "founder"]:
+        st.markdown('<div class="icon-label"><i class="fas fa-building"></i> What does your business do?</div>', unsafe_allow_html=True)
+        business_type = st.text_input(
+            "",
+            placeholder="e.g. Sustainable fashion, SaaS platform, Cafe",
+            label_visibility="collapsed"
+        )
+    elif profession and ("influencer" in profession.strip().lower() or "creator" in profession.strip().lower()):
+        st.markdown("<div class='icon-label'><i class='fas fa-bullseye'></i> What's your content niche?</div>", unsafe_allow_html=True)
+        niche = st.text_input(
+            "",
+            placeholder="e.g. Vegan recipes, Tech reviews, Book summaries",
+            label_visibility="collapsed"
+        )
+
+    st.markdown('<div class="icon-label"><i class="fas fa-star"></i> What are your key achievements or passions?</div>', unsafe_allow_html=True)
+    highlights = st.text_area(
+        "",
+        placeholder="Graduated from X • Featured in Y • Passionate about Z",
+        height=80,
+        label_visibility="collapsed",
+        help="What makes you unique? Awards, experiences, or values"
+    )
+    
+    st.markdown('<div class="icon-label"><i class="fas fa-users"></i> Who is your target audience?</div>', unsafe_allow_html=True)
+    audience = st.text_input(
+        "",
+        placeholder="e.g. Job seekers, Pet lovers, Gen-Z creators",
+        label_visibility="collapsed",
+        help="Who do you want to connect with your bio?"
+    )
+
+    if st.button("✨ Craft My Bio", use_container_width=True, key="bio_btn"):
+        if not profession.strip():
+            st.warning("Please tell us about your role first")
+        else:
+            with st.spinner("Crafting bios that sound authentically you..."):
+                time.sleep(1)
+                prompt = load_prompt("bio")
+                full_prompt = prompt.format(
+                    platform=platform,
+                    profession=profession,
+                    highlights=highlights,
+                    tone=tone,
+                    specifics=locals().get('art_type', '') or locals().get('business_type', '') or locals().get('niche', ''),
+                    count=num_bios,
+                    audience=audience  
+                )
+                bios = generate_bio(full_prompt)
+
+            st.markdown("</div>", unsafe_allow_html=True)  # Close section
+            st.markdown('<div class="result-card">', unsafe_allow_html=True)
+            st.markdown("""
+                <div class="result-header">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>Your Personalized Bio Options</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.text_area(
+                "Generated bios", 
+                value=bios, 
+                height=250, 
+                label_visibility="collapsed"
+            )
+            
+            st.download_button("💾 Download All Bios", bios, file_name=f"{platform}_bios.txt")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+# =================== CAPTION + HASHTAG GENERATOR ===================
+else:
+    st.markdown('<div class="section">', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="section-title">
+            <i class="fas fa-pen-alt"></i>
+            <span>Tell me about your post</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<div class="icon-label"><i class="fas fa-mobile-alt"></i> Which platform are you posting on?</div>', unsafe_allow_html=True)
+        platform = st.selectbox(
+            "",
+            ["Instagram", "TikTok", "YouTube", "Twitter", "Facebook"],
+            label_visibility="collapsed",
+            help="Where will you share this?"
+        )
+        
+        st.markdown('<div class="icon-label"><i class="fas fa-camera"></i> What content format are you using?</div>', unsafe_allow_html=True)
+        post_type = st.selectbox(
+            "",
+            ["Photo", "Reel/Short", "Video", "Carousel", "Story", "Text Quote"],
+            label_visibility="collapsed"
+        )
+        
+    with col2:
+        st.markdown('<div class="icon-label"><i class="fas fa-smile"></i> What mood do you want to convey?</div>', unsafe_allow_html=True)
+        tone = st.selectbox(
+            "",
+            ["Inspirational", "Funny/Humorous", "Educational", "Emotional", "Casual"],
+            index=0,
+            label_visibility="collapsed"
+        )
+        
+        st.markdown('<div class="icon-label"><i class="fas fa-users"></i> Who is your main audience?</div>', unsafe_allow_html=True)
+        audience = st.text_input(
+            "",
+            placeholder="e.g. Teenagers, Entrepreneurs, Parents",
+            label_visibility="collapsed",
+            help="Who should connect with this?"
+        )
+
+    # Content-specific details
+    st.markdown('<div class="icon-label"><i class="fas fa-bullseye"></i> What is this post about?</div>', unsafe_allow_html=True)
+    genre = st.text_input(
+        "",
+        placeholder="e.g. New product launch, Travel diary, Cooking tutorial",
+        label_visibility="collapsed"
+    )
+    
+    if genre:
+        if "product" in genre.lower():
+            st.markdown('<div class="icon-label"><i class="fas fa-box-open"></i> What are the key product details?</div>', unsafe_allow_html=True)
+            product_details = st.text_area(
+                "",
+                placeholder="What problem does it solve? Key features?",
+                height=60,
+                label_visibility="collapsed"
+            )
+        elif "travel" in genre.lower():
+            st.markdown('<div class="icon-label"><i class="fas fa-map-marker-alt"></i> Where is this travel location?</div>', unsafe_allow_html=True)
+            location = st.text_input(
+                "",
+                placeholder="Where is this?",
+                label_visibility="collapsed"
+            )
+        elif "recipe" in genre.lower() or "food" in genre.lower():
+            st.markdown('<div class="icon-label"><i class="fas fa-utensils"></i> What cuisine type is this?</div>', unsafe_allow_html=True)
+            cuisine = st.text_input(
+                "",
+                placeholder="e.g. Italian, Vegan, Street food",
+                label_visibility="collapsed"
+            )
+
+    st.markdown('<div class="icon-label"><i class="fas fa-comment-alt"></i> What is the core message or feeling?</div>', unsafe_allow_html=True)
+    message = st.text_area(
+        "",
+        placeholder="What should people take away? (e.g. 'Embrace imperfections', 'Small businesses need support')",
+        height=80,
+        label_visibility="collapsed"
+    )
+
+    if st.button("🚀 Create Post Content", use_container_width=True, key="caption_btn"):
+        if not genre.strip():
+            st.warning("Please describe your post content")
+        else:
+            with st.spinner("Crafting captions that resonate..."):
+                time.sleep(1)
+                prompt = load_prompt("caption")
+                final_prompt = prompt.format(
+                    platform=platform,
+                    post_type=post_type,
+                    genre=genre,
+                    tone=tone,
+                    audience=audience,
+                    specifics=locals().get('product_details', '') or locals().get('location', '') or locals().get('cuisine', ''),
+                    message=message
+                )
+                caption_output = generate_bio(final_prompt)
+
+            st.markdown("</div>", unsafe_allow_html=True)  # Close section
+            st.markdown('<div class="result-card">', unsafe_allow_html=True)
+            st.markdown("""
+                <div class="result-header">
+                    <i class="fas fa-comment-dots"></i>
+                    <h3>Your Post Content</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.text_area(
+                "Generated caption", 
+                value=caption_output, 
+                height=300, 
+                label_visibility="collapsed"
+            )
+            
+            st.download_button("💾 Copy Full Content", caption_output, file_name=f"{platform}_caption.txt")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+# Feedback Section
+st.markdown("""
+<div class="feedback-section">
+    <div class="section-title">
+        <i class="fas fa-comment-dots"></i>
+        <span>We'd Love Your Feedback</span>
+    </div>
+    
+    <p>Help us improve by sharing your thoughts about this tool.</p>
+    
+    <form action="https://formsubmit.co/YOUR_EMAIL_HERE" method="POST">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_subject" value="AI Social Assistant Feedback">
+        
+        <div style="margin-bottom: 1rem;">
+            <div class="icon-label"><i class="fas fa-user"></i> Your Name (Optional)</div>
+            <input type="text" name="name" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <div class="icon-label"><i class="fas fa-envelope"></i> Your Email (Optional)</div>
+            <input type="email" name="email" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <div class="icon-label"><i class="fas fa-edit"></i> Your Feedback</div>
+            <textarea name="feedback" required style="width: 100%; height: 120px; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
+        </div>
+        
+        <button type="submit" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; cursor: pointer; width: 100%;">
+            <i class="fas fa-paper-plane"></i> Submit Feedback
+        </button>
+    </form>
+</div>
+""", unsafe_allow_html=True)
+
+# Close content wrap
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Sticky Footer
+st.markdown("""
+<div class="footer">
+    ⚡ Powered by OpenAI • ✨ Crafted with ❤️ for creators • 💫 v2.0
+    <div class="creator-credit">
+        <span>Created by</span>
+        <span style="font-weight:500; color:#2563eb;">[Your Name/Company]</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)

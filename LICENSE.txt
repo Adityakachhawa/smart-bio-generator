@@ -1,0 +1,13 @@
+Copyright (c) 2025 Aditya Kachhawa
+
+All rights reserved.
+
+This software and associated documentation files (the “Software”) are the proprietary property of Aditya Kachhawa. You may not copy, modify, distribute, sublicense, or sell copies of the Software or use the Software for any commercial purposes without explicit written permission from the owner.
+
+You are granted permission to use this Software **only as a hosted service** provided by the owner (https://yourdomain.com), and not as standalone source code.
+
+Unauthorized copying, distribution, or reverse engineering of the Software, via any medium, is strictly prohibited.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND.
+
+For licensing inquiries, contact: adityakachhawa111@gmail.com
