@@ -6,6 +6,10 @@ import requests
 import time
 import os
 
+import os
+st.write("🔐 Key loaded:", os.getenv("OPENROUTER_API_KEY")[:6] + "..." if os.getenv("OPENROUTER_API_KEY") else "❌ NOT FOUND")
+
+
 # Helper function to generate bios
 def generate_bio(prompt: str) -> str:
     url = "https://openrouter.ai/api/v1/chat/completions"
