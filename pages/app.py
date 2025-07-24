@@ -16,15 +16,21 @@ def generate_bio(prompt: str) -> str:
         "X-Title": "Smart Bio Generator"
     }
     data = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "openai/gpt-3.5-turbo",  # Or "anthropic/claude-3-sonnet" if desired
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 500
     }
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    result = response.json()
-    return result['choices'][0]['message']['content']
 
+    response = requests.post(url, headers=headers, json=data)
+
+    try:
+        response.raise_for_status()
+        result = response.json()
+        return result['choices'][0]['message']['content']
+    except requests.exceptions.HTTPError as e:
+        st.error("❌ API error. Please check your API key and headers.")
+        st.code(response.text)
+        raise e
 # Load prompt template
 def load_prompt(name):
     with open(f"prompts/{name}.txt", "r") as file:
