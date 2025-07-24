@@ -11,7 +11,9 @@ def generate_bio(prompt: str) -> str:
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://aditya-smart-ai-bio-caption-generator.streamlit.app/",
+        "X-Title": "Smart Bio Generator"
     }
     data = {
         "model": "openai/gpt-3.5-turbo",
