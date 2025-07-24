@@ -7,34 +7,43 @@ import time
 import os
 
 import os
-st.write("🔐 Key loaded:", os.getenv("OPENROUTER_API_KEY")[:6] + "..." if os.getenv("OPENROUTER_API_KEY") else "❌ NOT FOUND")
+import requests
+import streamlit as st
 
-
-# Helper function to generate bios
 def generate_bio(prompt: str) -> str:
-    url = "https://openrouter.ai/api/v1/chat/completions"
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    import streamlit as st
+    import os, requests
+
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    st.write("🔐 Key starts with:", api_key[:10] + "...")  # Debug line
+
     headers = {
-        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://aditya-smart-ai-bio-caption-generator.streamlit.app/",
-        "X-Title": "Smart Bio Generator"
+        "HTTP-Referer": "https://smart-ai-bio-caption-generator.streamlit.app",  # ✅ Change to your deployed URL
+        "X-Title": "Smart AI Bio Generator"
     }
+
     data = {
-        "model": "openai/gpt-3.5-turbo",  # Or "anthropic/claude-3-sonnet" if desired
+        "model": "openai/gpt-3.5-turbo",
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 500
     }
 
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
 
     try:
         response.raise_for_status()
-        result = response.json()
-        return result['choices'][0]['message']['content']
+        return response.json()["choices"][0]["message"]["content"]
     except requests.exceptions.HTTPError as e:
-        st.error("❌ API error. Please check your API key and headers.")
+        st.error("❌ API error. Please check your key and headers.")
         st.code(response.text)
         raise e
+
+
 # Load prompt template
 def load_prompt(name):
     with open(f"prompts/{name}.txt", "r") as file:
