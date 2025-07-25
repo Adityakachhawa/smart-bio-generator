@@ -7,36 +7,48 @@ import time
 import os
 
 def generate_bio(prompt: str) -> str:
-    import os
-    import requests
+    try:
+        if "OPENROUTER_API_KEY" in st.secrets:
+            api_key = st.secrets["OPENROUTER_API_KEY"]
+        else:
+            st.error("API key not configured")
+            st.stop()
+            
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": st.secrets.get("APP_URL", "https://smart-ai-bio-caption-generator.streamlit.app"),
+            "X-Title": st.secrets.get("APP_TITLE", "Smart Bio Generator")
+        }
 
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        raise ValueError("OPENROUTER_API_KEY not set.")
+        data = {
+            "model": "openai/gpt-3.5-turbo",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 500
+        }
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://smart-ai-bio-caption-generator.streamlit.app",
-        "X-Title": "Smart Bio Generator"
-    }
-
-    data = {
-        "model": "openai/gpt-3.5-turbo",  # or whatever model you saw in your 200 response
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 500
-    }
-
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
-    response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"]
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=30  # Add timeout
+        )
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+        
+    except requests.exceptions.RequestException as e:
+        st.error(f"API request failed: {str(e)}")
+        st.stop()
 
 
-
-# Load prompt template
 def load_prompt(name):
-    with open(f"prompts/{name}.txt", "r") as file:
-        return file.read()
+    try:
+        with open(f"prompts/{name}.txt", "r") as file:
+            return file.read()
+    except FileNotFoundError:
+        # Fallback for Streamlit Cloud
+        import pkgutil
+        return pkgutil.get_data(__name__, f"prompts/{name}.txt").decode("utf-8")
 
 st.set_page_config(
     page_title="SocialCraft | AI Social Assistant", 
