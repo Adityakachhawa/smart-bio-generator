@@ -126,12 +126,12 @@ st.markdown("""
     </div>
     <div class="testimonials">
         <div class="testimonial-card">
-            <p class="testimonial-text">"SparkSocial saved me hours of brainstorming! The bios sound exactly like me but 10x more polished. My Instagram followers increased by 40% in just one month!"</p>
+            <p class="testimonial-text">"As a solo founder building everything from scratch, I used to spend hours trying to come up with the perfect bio or caption — and still never felt satisfied. Then I found SparkSocial. The bios felt like me, but sharper, smarter, and more confident. Within a month, my Instagram engagement exploded — 40% more followers, tons of profile visits, and people actually DMing me saying, 'Love your vibe!' SparkSocial didn’t just save me time — it gave my brand a voice I’m proud of."</p>
             <div class="testimonial-author">
                 <div class="author-avatar">SJ</div>
                 <div class="author-info">
-                    <h4>Sarah Johnson</h4>
-                    <p>Content Creator | 25K followers</p>
+                    <h4>Anurag Tanwar</h4>
+                    <p>Founder & CEO, THEREAL_BIKANA Company</p>
                 </div>
             </div>
         </div>
@@ -140,8 +140,8 @@ st.markdown("""
             <div class="testimonial-author">
                 <div class="author-avatar">MR</div>
                 <div class="author-info">
-                    <h4>Michael Rodriguez</h4>
-                    <p>Founder, EcoBoutique</p>
+                    <h4>Somdev Solanki</h4>
+                    <p>Content Creator | 25K follower</p>
                 </div>
             </div>
         </div>
