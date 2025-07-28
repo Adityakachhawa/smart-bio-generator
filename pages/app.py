@@ -8,33 +8,16 @@ import os
 
 def generate_bio(prompt: str) -> str:
     try:
-        if "OPENROUTER_API_KEY" in st.secrets:
-            api_key = st.secrets["OPENROUTER_API_KEY"]
-        else:
-            st.error("API key not configured")
-            st.stop()
-            
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": st.secrets.get("APP_URL", "https://smart-ai-bio-caption-generator.streamlit.app"),
-            "X-Title": st.secrets.get("APP_TITLE", "Smart Bio Generator")
-        }
-
-        data = {
-            "model": "openai/gpt-3.5-turbo",
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 500
-        }
-
+        # Replace with your new Vercel URL
+        API_URL = "https://smart-bio-3dd4gmpf9-aditya-kachhawas-projects.vercel.app/generate-content"
+        
         response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers=headers,
-            json=data,
-            timeout=30  # Add timeout
+            API_URL,
+            json={"prompt": prompt},
+            timeout=30
         )
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        return response.json()["content"]
         
     except requests.exceptions.RequestException as e:
         st.error(f"API request failed: {str(e)}")
