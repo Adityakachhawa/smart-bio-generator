@@ -4,18 +4,22 @@
     {
       "src": "api/generate-content.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/generate-content",
-      "dest": "api/generate-content.js",
+      "src": "/api/generate-content",
+      "dest": "/api/generate-content.js",
       "methods": ["POST"]
     },
     {
-      "src": "/(.*)",
-      "status": 404,
-      "dest": "/404"
+      "src": "/",
+      "dest": "/index.js",
+      "methods": ["GET"]
     }
   ]
 }

@@ -1,4 +1,9 @@
 // index.js
-module.exports = (req, res) => {
-  res.status(404).send('Not found - use POST /generate-content');
-};
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.status(200).send('SocialCraft API is running!');
+});
+
+module.exports = app;
