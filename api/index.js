@@ -1,9 +1,15 @@
-// index.js
-const express = require('express');
+import express from 'express';
 const app = express();
 
+app.use(express.json());
+
+// Simple root handler
 app.get('/', (req, res) => {
-  res.status(200).send('SocialCraft API is running!');
+  res.send(`
+    <h1>SocialCraft API</h1>
+    <p>Use POST /api/generate-content to access the API</p>
+    <p>Status: Running 🟢</p>
+  `);
 });
 
-module.exports = app;
+export default app;
