@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/generate-content.js",
+      "src": "generate-content.js",
       "use": "@vercel/node"
     },
     {
@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/api/generate-content",
-      "dest": "/api/generate-content.js",
+      "dest": "/generate-content.js",
       "methods": ["POST"]
     },
     {

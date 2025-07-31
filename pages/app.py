@@ -9,7 +9,7 @@ import os
 def generate_bio(prompt: str) -> str:
     try:
         # Replace with your new Vercel URL
-        API_URL = "https://smart-bio-3dd4gmpf9-aditya-kachhawas-projects.vercel.app/api/generate-content"
+        API_URL = "https://smart-bio-3dd4gmpf9-aditya-kachhawas-projects.vercel.app/api/generate-content.js"
         
         response = requests.post(
             API_URL,
